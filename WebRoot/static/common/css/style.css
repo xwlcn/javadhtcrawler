@@ -1,0 +1,82 @@
+body {
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	height: 100%;
+}
+
+#current a, #current a:HOVER {
+	color: #fff;
+	background-color: #111
+}
+
+#keyword {
+	border-top-left-radius: 2px;
+	border-bottom-left-radius: 2px;
+	border: 1px solid #ddd;
+	-webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+	box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+}
+
+#search_button {
+	border-top-right-radius: 2px;
+	border-bottom-right-radius: 2px;
+}
+
+.padding0 {
+	padding: 0;
+}
+
+.search-header {
+	padding-top: 45px;
+	background: #efefef;
+	border-bottom: 1px solid #ccc
+}
+
+.index-content {
+	width: 100%;
+	height: 100%;
+	padding: 0;
+	display: table;
+	position: absolute;
+	top: 0px;
+	left: 0;
+}
+
+.index-content .first-content {
+	width: 100%;
+	display: table;
+	/* height: 20%; */
+}
+
+.index-content .first-content .wrapper {
+	padding: 0;
+	/* vertical-align: middle; */
+	display: table-cell;
+	margin: 0;
+}
+
+.index-content .second-content {
+	width: 100%;
+	display: table;
+	/* height: 60%; */
+}
+
+.foo {
+	width: 100%;
+	height: 1%;
+	display: table;
+	text-align: center;
+}
+
+.foo .wrapper {
+	padding: 0;
+	vertical-align: bottom;
+	display: table-cell;
+	margin: 0;
+}
+
+.zwf {
+	height: 100%;
+	width: 160px;
+}
