@@ -40,7 +40,7 @@ public class Main extends Thread {
 		BlockingQueue<DownloadPeer> dps = new LinkedBlockingQueue<>();
 
 		for (int i = 0; i < 220; i++) {
-			Thread t = new WireMetadataDownloadTask(dps);
+			Thread t = new WireMetadataDownloadTask(dps, RedisPool.getJedis());
 			threads.add(t);
 			t.start();
 		}

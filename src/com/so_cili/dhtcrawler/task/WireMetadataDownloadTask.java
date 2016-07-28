@@ -12,31 +12,36 @@ import com.so_cili.dhtcrawler.structure.Torrent;
 import com.so_cili.dhtcrawler.util.ZipUtil;
 import com.so_cili.lucene.manager.IndexManager;
 
+import redis.clients.jedis.Jedis;
+
 public class WireMetadataDownloadTask extends Thread{
 	
 	//private AnnouncePeerInfoHashWireHandler handler = new AnnouncePeerInfoHashWireHandler();
 	
 
 	private BlockingQueue<DownloadPeer> dps;
+	private Jedis jedis;
 	
-	public WireMetadataDownloadTask(BlockingQueue<DownloadPeer> dps) {
+	public WireMetadataDownloadTask(BlockingQueue<DownloadPeer> dps, Jedis jedis) {
 		super();
 		this.dps = dps;
+		this.jedis = jedis;
 		//initHandler();
 	}
 
 	@Override
 	public void run() {
-		try {
-			while (!this.isInterrupted()) {
-				//System.out.println("current work thread: " + tid + ", dps size:" + dps.size());
-					DownloadPeer peer;
-					peer = dps.take();
-					AnnouncePeerInfoHashWireHandler handler = new AnnouncePeerInfoHashWireHandler();
-					initHandler(handler);
-					handler.handler(new InetSocketAddress(peer.getIp(), peer.getPort()), peer.getInfo_hash());
-			}
-		} catch (InterruptedException e) {}
+		while (!this.isInterrupted()) {
+			//System.out.println("current work thread: " + tid + ", dps size:" + dps.size());
+			try {
+				DownloadPeer peer;
+				peer = dps.take();
+				AnnouncePeerInfoHashWireHandler handler = new AnnouncePeerInfoHashWireHandler();
+				initHandler(handler);
+				handler.handler(new InetSocketAddress(peer.getIp(), peer.getPort()), peer.getInfo_hash());
+				jedis.del(peer.getInfo_hash());
+			} catch (Exception e) {}
+		}
 	}
 	
 	private void initHandler(AnnouncePeerInfoHashWireHandler handler) {
