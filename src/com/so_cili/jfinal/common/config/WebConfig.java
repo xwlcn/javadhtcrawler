@@ -1,7 +1,5 @@
 package com.so_cili.jfinal.common.config;
 
-import java.io.IOException;
-
 import com.jfinal.config.Constants;
 import com.jfinal.config.Handlers;
 import com.jfinal.config.Interceptors;
@@ -9,6 +7,7 @@ import com.jfinal.config.JFinalConfig;
 import com.jfinal.config.Plugins;
 import com.jfinal.config.Routes;
 import com.jfinal.core.JFinal;
+import com.jfinal.kit.Prop;
 import com.jfinal.kit.PropKit;
 import com.jfinal.plugin.activerecord.ActiveRecordPlugin;
 import com.jfinal.plugin.activerecord.dialect.MysqlDialect;
@@ -16,12 +15,8 @@ import com.jfinal.plugin.c3p0.C3p0Plugin;
 import com.jfinal.render.ViewType;
 import com.so_cili.dhtcrawler.constant.DataBase;
 import com.so_cili.dhtcrawler.main.Main;
-import com.so_cili.dhtcrawler.test.AddPicture;
-import com.so_cili.dhtcrawler.test.CreateIndex;
-import com.so_cili.dhtcrawler.test.PutSubfiles;
 import com.so_cili.jfinal.controller.IndexController;
 import com.so_cili.jfinal.entity.AVer;
-import com.so_cili.jfinal.entity.SubFile;
 import com.so_cili.jfinal.handler.ParaHandler;
 import com.so_cili.lucene.manager.IndexManager;
 
@@ -31,10 +26,8 @@ public class WebConfig extends JFinalConfig {
 	 */
 	@Override
 	public void configConstant(Constants me) {
-		//读取数据库配置文件
-		PropKit.use("config.properties");
 		//设置当前是否为开发模式
-		me.setDevMode(PropKit.getBoolean("devMode"));
+		me.setDevMode(PropKit.use("config.properties").getBoolean("devMode"));
 		//设置默认上传文件保存路径 getFile等使用
 		me.setBaseUploadPath("/upload");
 		//设置上传最大限制尺寸
@@ -64,10 +57,11 @@ public class WebConfig extends JFinalConfig {
 	 */
 	@Override
 	public void configPlugin(Plugins me) {
+		Prop prop = PropKit.use("config.properties");
 		//配置数据库连接池插件
-		C3p0Plugin c3p0Plugin=new C3p0Plugin(PropKit.get("jdbcUrl"), PropKit.get("user"), PropKit.get("password"));
-		c3p0Plugin.setMaxPoolSize(400);
-		c3p0Plugin.setMinPoolSize(210);
+		C3p0Plugin c3p0Plugin=new C3p0Plugin(prop.get("jdbcUrl"), prop.get("user"), prop.get("password"));
+		c3p0Plugin.setMaxPoolSize(prop.getInt("maxPoolSize"));
+		c3p0Plugin.setMinPoolSize(prop.getInt("minPoolSize"));
 		//orm映射 配置ActiveRecord插件
 		ActiveRecordPlugin arp=new ActiveRecordPlugin(c3p0Plugin);
 		arp.setShowSql(PropKit.getBoolean("devMode"));

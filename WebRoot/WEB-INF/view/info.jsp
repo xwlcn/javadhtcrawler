@@ -148,7 +148,7 @@
 						<c:forEach items="${related.list }" var="t">
 							<c:if test="${torrent.id != t.id }">
 							<tr>
-								<td><a class="c-blue" href="${pageContext.request.contextPath }/info/${t.flag }" title="${t.name }">${t.name }</a></td>
+								<td><a class="c-blue" href="${pageContext.request.contextPath }/info/${t.flag }" >${t.name }</a></td>
 							</tr>
 							</c:if>
 						</c:forEach>

@@ -15,10 +15,13 @@ import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.highlight.Fragmenter;
 import org.apache.lucene.search.highlight.Highlighter;
@@ -137,7 +140,7 @@ public class IndexManager {
             return null;
         }
 	}
-	
+
 	public static List<String> getWords(String str){  
 	    List<String> result = new ArrayList<String>();  
 	    TokenStream stream = null;  
@@ -172,5 +175,5 @@ public class IndexManager {
         TopDocs tds = searcher.search(query, num);
         return tds.scoreDocs[num - 1];
     }
-	
+
 }

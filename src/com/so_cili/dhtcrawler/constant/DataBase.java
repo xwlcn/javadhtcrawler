@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import com.jfinal.kit.PropKit;
 import com.jfinal.plugin.activerecord.Db;
 import com.so_cili.dhtcrawler.util.StringUtil;
 import com.so_cili.jfinal.entity.Torrent;
@@ -28,7 +29,7 @@ public class DataBase {
 					t.put("flag", t.get("id") + StringUtil.formatStr(t.getStr("name")));
 				}
 			}
-		}, 300, 60000);
+		}, 300, PropKit.use("crawler.properties").getLong("dataBase.cache.flush.time"));
 	}
 	
 	public static void stopCache() {

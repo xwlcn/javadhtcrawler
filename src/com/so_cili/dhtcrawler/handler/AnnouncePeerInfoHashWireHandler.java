@@ -54,7 +54,7 @@ public class AnnouncePeerInfoHashWireHandler implements IInfoHashHandler {
 	};
 	private final byte BT_MSG_ID = 20 & 0xff;
 	private final int EXT_HANDSHAKE_ID = 0;
-	private final int CONNECT_TIMEOUT = 3000;
+	private final int CONNECT_TIMEOUT = 1000;
 	private final int READ_WRITE_TIMEOUT = 3000;
 	private final int MAX_METADATA_SIZE = 1000000;
 	
@@ -92,8 +92,8 @@ public class AnnouncePeerInfoHashWireHandler implements IInfoHashHandler {
 	
 	private byte[] readBuff = new byte[1024];
 
-	public void handler(InetSocketAddress address, byte[] info_hash) {
-		try {
+	public void handler(InetSocketAddress address, byte[] info_hash) throws Exception {
+
 			stop = false;
 			nextSize = 0;
 			
@@ -115,11 +115,7 @@ public class AnnouncePeerInfoHashWireHandler implements IInfoHashHandler {
 			out = socket.getOutputStream();
 			sendHandShake();
 			loop();
-		} catch (Exception e) {
-			logger.error("init error:" + e);
-			//e.printStackTrace();
-			exit();
-		}
+
 	}
 	
 	private void loop() throws IOException {
@@ -130,7 +126,7 @@ public class AnnouncePeerInfoHashWireHandler implements IInfoHashHandler {
 			checkMessage();
 		}
 		if (!stop)
-			exit();
+			release();
 	}
 	
 	private void checkMessage() throws IOException {
@@ -218,7 +214,7 @@ public class AnnouncePeerInfoHashWireHandler implements IInfoHashHandler {
 		BencodingInputStream bencode = new BencodingInputStream(stream);) {
 			map = (Map<String, Object>) bencode.readMap();
 		} catch (Exception e) {
-			exit();
+			release();
 		}
 		return map;
 	}
@@ -272,16 +268,10 @@ public class AnnouncePeerInfoHashWireHandler implements IInfoHashHandler {
 	
 	private NextFunction onMessage = new NextFunction() {
 		@Override
-		public void onFunction(byte[] buff) {
+		public void onFunction(byte[] buff) throws IOException {
 			parseNext(4, onMessageLength);
 			if (buff[0] == BT_MSG_ID) {
-				try {
-					onExtendMessage(buff[1], Arrays.copyOfRange(buff, 2, buff.length));
-				} catch (IOException e) {
-					e.printStackTrace();
-					if (!stop)
-						exit();
-				}
+				onExtendMessage(buff[1], Arrays.copyOfRange(buff, 2, buff.length));
 			}
 		}
 	};
@@ -295,26 +285,20 @@ public class AnnouncePeerInfoHashWireHandler implements IInfoHashHandler {
 				//接下来是协议名称(长度：protocolLen)和BT_RESERVED(长度：8)、info_hash(长度：20)、peer_id(长度：20)
 				parseNext(protocolLen + 48, new NextFunction() {
 					@Override
-					public void onFunction(byte[] buff) {
+					public void onFunction(byte[] buff) throws IOException {
 						byte[] protocol = Arrays.copyOfRange(buff, 0, protocolLen);
 						if (!BT_PROTOCOL.equals(new String(protocol))) {
 							logger.error("handshake failed.");
-							exit();
+							release();
 							return;
 						}
 						byte[] handshake = Arrays.copyOfRange(buff, protocolLen, buff.length);
 						if (handshake[5] == 0x10) {
 							parseNext(4, onMessageLength);
-							try {
-								sendExtHandShake();
-							} catch (IOException e) {
-								e.printStackTrace();
-								if (!stop)
-									exit();
-							}
+							sendExtHandShake();
 						} else {
 							logger.error("remote peer don't support download metadata.");
-							exit();
+							release();
 						}
 					}
 				});
@@ -329,13 +313,13 @@ public class AnnouncePeerInfoHashWireHandler implements IInfoHashHandler {
 		
 		if (m == null || !m.containsKey("ut_metadata") || !map.containsKey("metadata_size")) {
 			logger.error("onExtendHandShake failed");
-			exit();
+			release();
 			return;
 		}
 		this.ut_metadata = ((BigInteger) m.get("ut_metadata")).intValue();
 		this.metadata_size = ((BigInteger) map.get("metadata_size")).intValue();
 		if (this.metadata_size > MAX_METADATA_SIZE) {
-			exit();
+			release();
 			return;
 		}
 		
@@ -350,13 +334,13 @@ public class AnnouncePeerInfoHashWireHandler implements IInfoHashHandler {
 		
 		if (!map.containsKey("msg_type") || !map.containsKey("piece")) {
 			logger.error("onPiece packet error.");
-			exit();
+			release();
 			return;
 		}
 
 		if (((BigInteger) map.get("msg_type")).intValue() != 1) {
 			logger.error("onPiece error, msg_type:" + map.get("msg_type"));
-			exit();
+			release();
 			return;
 		}
 
@@ -391,7 +375,7 @@ public class AnnouncePeerInfoHashWireHandler implements IInfoHashHandler {
 		//writeToFile();
 		//System.out.println(JSON.toJSON(info));
 
-		exit();
+		release();
 	}
 	
 	private String decode_utf8(String encoding, Map<String, Object> map, String key) throws UnsupportedEncodingException {
@@ -427,7 +411,7 @@ public class AnnouncePeerInfoHashWireHandler implements IInfoHashHandler {
 			encoding = (String) map.get("encoding");
 		}
 		
-		if (map.containsKey("creation date")) {
+		/*if (map.containsKey("creation date")) {
 			torrent.setCreationDate(new Date(((BigInteger) map.get("creation date")).longValue()));
 		}
 		else {
@@ -444,7 +428,7 @@ public class AnnouncePeerInfoHashWireHandler implements IInfoHashHandler {
 		
 		if (map.containsKey("created by")) {
 			torrent.setCreatedBy(decode_utf8(encoding, map, "created by"));
-		}
+		}*/
 		Info torrentInfo = new Info();
 		String name = decode_utf8(encoding, map, "name");
 		torrentInfo.setName(name.length() > 300 ? name.substring(0, 300) : name);
@@ -485,7 +469,7 @@ public class AnnouncePeerInfoHashWireHandler implements IInfoHashHandler {
 		} else {
 			torrentInfo.setLength(((BigInteger) info.get("length")).longValue());
 			
-			String type = ExtensionUtil.getExtensionType(torrent.getInfo().getName());
+			String type = ExtensionUtil.getExtensionType(name);
 			torrent.setType(type == null ? "未知" :type);
 		}
 		torrent.setInfo(torrentInfo);
@@ -505,7 +489,7 @@ public class AnnouncePeerInfoHashWireHandler implements IInfoHashHandler {
 
 	}
 
-	private void exit() {
+	public void release() {
 		//System.out.println("exit");
 		stop = true;
 		metadata = null;
@@ -525,7 +509,7 @@ public class AnnouncePeerInfoHashWireHandler implements IInfoHashHandler {
 			if (socket != null)
 				socket.close();
 		} catch (IOException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		if (torrent != null) {
 			torrent.setInfo_hash(ByteUtil.byteArrayToHex(info_hash));
@@ -542,7 +526,7 @@ public class AnnouncePeerInfoHashWireHandler implements IInfoHashHandler {
 	}
 	
 	private interface NextFunction {
-		public void onFunction(byte[] buff);
+		public void onFunction(byte[] buff)  throws IOException;
 	}
 
 	public void setOnMetadataListener(OnMetadataListener onMetadataListener) {
