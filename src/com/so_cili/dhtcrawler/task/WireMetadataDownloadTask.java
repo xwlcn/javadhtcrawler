@@ -2,66 +2,44 @@ package com.so_cili.dhtcrawler.task;
 
 import java.net.InetSocketAddress;
 import java.sql.Timestamp;
-import java.util.List;
-import java.util.concurrent.BlockingQueue;
 
 import com.alibaba.fastjson.JSON;
 import com.so_cili.dhtcrawler.handler.AnnouncePeerInfoHashWireHandler;
 import com.so_cili.dhtcrawler.listener.OnMetadataListener;
 import com.so_cili.dhtcrawler.main.Main;
 import com.so_cili.dhtcrawler.structure.DownloadPeer;
-import com.so_cili.dhtcrawler.structure.MyQueue;
 import com.so_cili.dhtcrawler.structure.Torrent;
 import com.so_cili.dhtcrawler.util.ZipUtil;
-import com.so_cili.lucene.manager.IndexManager;
-
-import redis.clients.jedis.Jedis;
 
 public class WireMetadataDownloadTask extends Thread{
 	
 	//private AnnouncePeerInfoHashWireHandler handler = new AnnouncePeerInfoHashWireHandler();
 	
 
-	private List<BlockingQueue<DownloadPeer>> dps;
-	private MyQueue<com.so_cili.jfinal.entity.Torrent> torrentQueue;
-	private Jedis jedis;
+	private DownloadPeer peer;
 	
-	public WireMetadataDownloadTask(List<BlockingQueue<DownloadPeer>> dps, 
-			MyQueue<com.so_cili.jfinal.entity.Torrent> torrentQueue, Jedis jedis) {
-		super();
-		this.dps = dps;
-		this.torrentQueue = torrentQueue;
-		this.jedis = jedis;
-		//initHandler();
+	public WireMetadataDownloadTask(DownloadPeer peer) {
+		this.peer = peer;
 	}
 
 	@Override
 	public void run() {
-		int index = 0;
-		int size = dps.size();
-		while (!this.isInterrupted()) {
-				//System.out.print("dps size:" + dps.size() + "\r");
-				DownloadPeer peer;
-				try {
-					index = (index + 1) % size;
-					peer = dps.get(index).take();
-					AnnouncePeerInfoHashWireHandler handler = new AnnouncePeerInfoHashWireHandler();
-					initHandler(handler);
-					try {
-						handler.handler(new InetSocketAddress(peer.getIp(), peer.getPort()), peer.getInfo_hash());
-					} catch (Exception e) {
-						handler.release();
-						//jedis.del(ByteUtil.byteArrayToHex(peer.getInfo_hash()));
-						//e.printStackTrace();
-						//System.out.println(e.getMessage());
-					} finally {
-						jedis.del(peer.getInfo_hash());
-						handler = null;
-					}
-				} catch (InterruptedException e) {
-					//e.printStackTrace();
-				}
-		}
+
+			AnnouncePeerInfoHashWireHandler handler = new AnnouncePeerInfoHashWireHandler();
+			initHandler(handler);
+			try {
+				handler.handler(new InetSocketAddress(peer.getIp(), peer.getPort()), peer.getInfo_hash());
+			} catch (Exception e) {
+				//jedis.del(ByteUtil.byteArrayToHex(peer.getInfo_hash()));
+				//e.printStackTrace();
+				//System.out.println(e.getMessage());
+			} finally {
+				//jedis.del(peer.getInfo_hash());
+				handler.release();
+				handler = null;
+				Main.count.decrementAndGet();
+			}
+
 	}
 	
 	private void initHandler(AnnouncePeerInfoHashWireHandler handler) {
@@ -74,7 +52,7 @@ public class WireMetadataDownloadTask extends Thread{
 						return;
 					//System.out.print("success count:" + Main.count.getAndIncrement() + "\r");
 					//入库操作
-					/*com.so_cili.jfinal.entity.Torrent t = new com.so_cili.jfinal.entity.Torrent();
+					com.so_cili.jfinal.entity.Torrent t = new com.so_cili.jfinal.entity.Torrent();
 					t.set("info_hash", torrent.getInfo_hash())
 					.set("name", torrent.getInfo().getName())
 					.set("type", torrent.getType())
@@ -82,9 +60,9 @@ public class WireMetadataDownloadTask extends Thread{
 					.set("size", torrent.getInfo().getLength())
 					.set("hot", 1)
 					.set("subfiles", torrent.getInfo().getFiles() != null && torrent.getInfo().getFiles().size() > 0 ? ZipUtil.compress(JSON.toJSONString(torrent.getInfo().getFiles())) : null);
-					torrentQueue.insert(t);*/
+					Main.torrentQueue.insert(t);
 					
-					com.so_cili.jfinal.entity.Torrent t = new com.so_cili.jfinal.entity.Torrent();
+					/*com.so_cili.jfinal.entity.Torrent t = new com.so_cili.jfinal.entity.Torrent();
 					boolean result = t.set("info_hash", torrent.getInfo_hash())
 										.set("name", torrent.getInfo().getName())
 										.set("type", torrent.getType())
@@ -97,7 +75,7 @@ public class WireMetadataDownloadTask extends Thread{
 						IndexManager.createIndex(new com.so_cili.jfinal.entity.Torrent()
 								.set("info_hash", torrent.getInfo_hash())
 								.set("name", torrent.getInfo().getName()));
-					}
+					}*/
 			}
 		});
 	}

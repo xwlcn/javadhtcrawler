@@ -36,7 +36,7 @@ public class SaveTorrentTask extends Thread {
 				List<com.so_cili.jfinal.entity.Torrent> list = torrentQueue.getAll();
 				List<String> hashes = new ArrayList<>();
 				try {
-					sleep(5000);
+					sleep(20000);
 					if (list.size() > 0) {
 						int[] rs = Db.batchSave(list, list.size()); 
 						for (int i = 0; i < rs.length; i++) {
@@ -48,7 +48,7 @@ public class SaveTorrentTask extends Thread {
 						}
 					}
 				} catch (Exception e) {
-					e.printStackTrace();
+					//e.printStackTrace();
 				} finally {
 					for (Torrent t : list) {
 						hashes.add(t.getStr("info_hash"));

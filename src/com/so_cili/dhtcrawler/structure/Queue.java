@@ -7,6 +7,11 @@ public class Queue<E> extends HashSet<E>
 
 	private static final long serialVersionUID = 1L;
 	private int waitingThreads = 0;
+	
+	@Override
+	public synchronized int size() {
+		return super.size();
+	}
 
 	public synchronized void insert(E e)
 	{
@@ -25,7 +30,7 @@ public class Queue<E> extends HashSet<E>
 			}
 			waitingThreads--;
 		}
-		E next = iterator().next();
+		E next = this.iterator().next();
 		remove(next);
 		return next;
 	}

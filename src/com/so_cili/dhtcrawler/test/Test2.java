@@ -20,7 +20,7 @@ import com.so_cili.dhtcrawler.structure.Queue;
 import com.so_cili.dhtcrawler.util.ByteUtil;
 import com.so_cili.dhtcrawler.util.NodeIdUtil;
 
-public class Test {
+public class Test2 {
 	
 	@SuppressWarnings("unused")
 	private static final String BT_PROTOCOL = "BitTorrent protocol";

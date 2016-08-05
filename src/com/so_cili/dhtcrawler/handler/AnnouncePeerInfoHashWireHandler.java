@@ -54,15 +54,13 @@ public class AnnouncePeerInfoHashWireHandler implements IInfoHashHandler {
 	};
 	private final byte BT_MSG_ID = 20 & 0xff;
 	private final int EXT_HANDSHAKE_ID = 0;
-	private final int CONNECT_TIMEOUT = 1000;
+	private final int CONNECT_TIMEOUT = 2000;
 	private final int READ_WRITE_TIMEOUT = 3000;
 	private final int MAX_METADATA_SIZE = 1000000;
 	
-	private final byte[] EXT_HANDSHAKE_DATA = new byte["d1:md11:ut_metadatai1eee".length()];
+	private Map<String, Object> map = new HashMap<>();
 	
-	{
-		System.arraycopy("d1:md11:ut_metadatai1eee".getBytes(), 0, EXT_HANDSHAKE_DATA, 0, "d1:md11:ut_metadatai1eee".length());
-	}
+	private final byte[] EXT_HANDSHAKE_DATA = "d1:md11:ut_metadatai1eee".getBytes();
 	
 	private InetSocketAddress address;
 	private byte[] info_hash;
@@ -108,7 +106,6 @@ public class AnnouncePeerInfoHashWireHandler implements IInfoHashHandler {
 			parseHandShake();
 			
 			socket = new Socket();
-			socket.setReuseAddress(true);
 			socket.connect(this.address, CONNECT_TIMEOUT);
 			socket.setSoTimeout(READ_WRITE_TIMEOUT);
 			in = socket.getInputStream();
@@ -186,8 +183,8 @@ public class AnnouncePeerInfoHashWireHandler implements IInfoHashHandler {
 	}
 	
 	private void requestPiece(int piece) throws IOException {
+		map.clear();
 
-		Map<String, Object> map = new HashMap<>();
 		map.put("msg_type", 0);
 		map.put("piece", piece);
 		
@@ -198,20 +195,20 @@ public class AnnouncePeerInfoHashWireHandler implements IInfoHashHandler {
 	}
 	
 	private byte[] encode(Map<String, Object> map) throws IOException {
-		ByteArrayOutputStream stream = new ByteArrayOutputStream();
-		BencodingOutputStream bencode = new BencodingOutputStream(stream);
-		bencode.writeMap(map);
-		byte[] data = stream.toByteArray();
-		bencode.close();
-		stream.close();
+		byte[] data = {};
+		try(ByteArrayOutputStream stream = new ByteArrayOutputStream();
+			BencodingOutputStream bencode = new BencodingOutputStream(stream)) {
+			bencode.writeMap(map);
+			data = stream.toByteArray();
+		} catch (Exception e) {}
 		return data;
 	}
 	
 	@SuppressWarnings("unchecked")
 	private Map<String, Object> decode(byte[] buf) {
-		Map<String, Object> map = null;
+		map.clear();
 		try (ByteArrayInputStream stream = new ByteArrayInputStream(buf);
-		BencodingInputStream bencode = new BencodingInputStream(stream);) {
+		BencodingInputStream bencode = new BencodingInputStream(stream)) {
 			map = (Map<String, Object>) bencode.readMap();
 		} catch (Exception e) {
 			release();
@@ -431,7 +428,7 @@ public class AnnouncePeerInfoHashWireHandler implements IInfoHashHandler {
 		}*/
 		Info torrentInfo = new Info();
 		String name = decode_utf8(encoding, map, "name");
-		torrentInfo.setName(name.length() > 300 ? name.substring(0, 300) : name);
+		torrentInfo.setName(name.length() > 200 ? name.substring(0, 200) : name);
 		
 		Set<String> types = new HashSet<>();
 		//多文件
@@ -445,7 +442,7 @@ public class AnnouncePeerInfoHashWireHandler implements IInfoHashHandler {
 				
 				String path = decode_utf8_2(encoding, f, "path");
 				if (path != null) {
-					path = path.length() > 300 ? path.substring(0, 300) : path;
+					path = path.length() > 200 ? path.substring(0, 200) : path;
 				}
 				SubFile subFile = new SubFile(StringUtil.formatSize((double) length), path);
 				
@@ -494,22 +491,46 @@ public class AnnouncePeerInfoHashWireHandler implements IInfoHashHandler {
 		stop = true;
 		metadata = null;
 		try {
-			if (writeStream != null)
+			if (writeStream != null) {
 				writeStream.close();
+				writeStream = null;
+			}
+		} catch (IOException e) {
+		}
+		try {
 			if (os != null) {
 				os.close();
+				os = null;
 			}
+		} catch (IOException e) {
+		}
+		try {
 			if (readStream != null) {
 				readStream.close();
+				readStream = null;
 			}
-			if (in != null)
-				in.close();
-			if (out != null)
-				out.close();
-			if (socket != null)
-				socket.close();
 		} catch (IOException e) {
-			//e.printStackTrace();
+		}
+		try {
+			if (in != null) {
+				in.close();
+				in = null;
+			}
+		} catch (IOException e) {
+		}
+		try {
+			if (out != null) {
+				out.close();
+				out = null;
+			}
+		} catch (IOException e) {
+		}
+		try {
+			if (socket != null) {
+				socket.close();
+				socket = null;
+			}
+		} catch (IOException e) {
 		}
 		if (torrent != null) {
 			torrent.setInfo_hash(ByteUtil.byteArrayToHex(info_hash));
