@@ -35,13 +35,14 @@ public class SaveTorrentTask extends Thread {
 			try {
 				List<com.so_cili.jfinal.entity.Torrent> list = torrentQueue.getAll();
 				List<String> hashes = new ArrayList<>();
+				List<Torrent> torrents = new ArrayList<>();
 				try {
 					sleep(20000);
 					if (list.size() > 0) {
 						int[] rs = Db.batchSave(list, list.size()); 
 						for (int i = 0; i < rs.length; i++) {
 							if (rs[i] > 0) {
-								IndexManager.createIndex(new com.so_cili.jfinal.entity.Torrent()
+								torrents.add(new com.so_cili.jfinal.entity.Torrent()
 										.set("info_hash", list.get(i).getStr("info_hash"))
 										.set("name", list.get(i).getStr("name")));
 							}
@@ -50,10 +51,13 @@ public class SaveTorrentTask extends Thread {
 				} catch (Exception e) {
 					//e.printStackTrace();
 				} finally {
-					for (Torrent t : list) {
+					IndexManager.createIndex(torrents.toArray(new Torrent[torrents.size()]));
+					list.clear();
+					list = null;
+					/*for (Torrent t : list) {
 						hashes.add(t.getStr("info_hash"));
 					}
-					jedis.del(hashes.toArray(new String[hashes.size()]));
+					jedis.del(hashes.toArray(new String[hashes.size()]));*/
 				}
 			} catch (Exception e) {}
 		}

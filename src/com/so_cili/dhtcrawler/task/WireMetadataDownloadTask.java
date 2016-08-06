@@ -11,7 +11,7 @@ import com.so_cili.dhtcrawler.structure.DownloadPeer;
 import com.so_cili.dhtcrawler.structure.Torrent;
 import com.so_cili.dhtcrawler.util.ZipUtil;
 
-public class WireMetadataDownloadTask extends Thread{
+public class WireMetadataDownloadTask implements Runnable {
 	
 	//private AnnouncePeerInfoHashWireHandler handler = new AnnouncePeerInfoHashWireHandler();
 	
@@ -37,6 +37,7 @@ public class WireMetadataDownloadTask extends Thread{
 				//jedis.del(peer.getInfo_hash());
 				handler.release();
 				handler = null;
+				peer = null;
 				Main.count.decrementAndGet();
 			}
 

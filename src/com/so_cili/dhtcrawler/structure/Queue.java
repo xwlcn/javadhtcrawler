@@ -1,6 +1,7 @@
 package com.so_cili.dhtcrawler.structure;
 
 import java.util.HashSet;
+import java.util.Iterator;
 
 public class Queue<E> extends HashSet<E>
 {
@@ -30,8 +31,9 @@ public class Queue<E> extends HashSet<E>
 			}
 			waitingThreads--;
 		}
-		E next = this.iterator().next();
-		remove(next);
+		Iterator<E> it = this.iterator();
+		E next = it.next();
+		it.remove();
 		return next;
 	}
 

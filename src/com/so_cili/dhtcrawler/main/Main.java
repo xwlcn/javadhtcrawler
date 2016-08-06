@@ -1,7 +1,6 @@
 package com.so_cili.dhtcrawler.main;
 
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -33,7 +32,8 @@ public class Main extends Thread {
 	public static MyQueue<Torrent> torrentQueue = new MyQueue<>();
 	private List<Thread> threads = new ArrayList<>();
 	private DHTServer server = null;
-	private ExecutorService threadPool;
+	private ExecutorService metadataDwonloadThreadPool;
+	private ExecutorService CheckExistThreadPool;
 	
 	@Override
 	public void run() {
@@ -54,10 +54,8 @@ public class Main extends Thread {
 			dps.add(new LinkedBlockingQueue<>());
 		}*/
 
-		BlockingQueue<DownloadPeer> hashQueue = new LinkedBlockingQueue<>();
-		
-		threadPool = Executors.newFixedThreadPool(prop.getInt("main.metadata.thread.num"));
-
+		metadataDwonloadThreadPool = Executors.newFixedThreadPool(prop.getInt("main.metadata.thread.num"));
+		CheckExistThreadPool = Executors.newFixedThreadPool(prop.getInt("main.checkexist.thread.num"));
 		/*BlockingQueue<DownloadPeer> downloadPeerQueue = new LinkedBlockingQueue<>();*/
 		
 		//启动下载metadata的线程
@@ -68,14 +66,12 @@ public class Main extends Thread {
 		}*/
 		
 		//启动检测info_hash在数据库是否存在的线程
-		for (int i = 0; i < prop.getInt("main.checkexist.thread.num"); i++) {
+		/*for (int i = 0; i < prop.getInt("main.checkexist.thread.num"); i++) {
 			Thread t = new CheckExistTask(hashQueue, threadPool, RedisPool.getJedis());
 			threads.add(t);
 			t.start();
-		}
+		}*/
 
-		ByteBuffer buffer = ByteBuffer.allocate(1000000);
-		
 		SaveTorrentTask saveTorrentTask = new SaveTorrentTask(torrentQueue, RedisPool.getJedis());
 		threads.add(saveTorrentTask);
 		saveTorrentTask.start();
@@ -104,6 +100,7 @@ public class Main extends Thread {
 		});
 		
 		final Long MAX_INFO_HASH = prop.getLong("main.dhtserver.max.info_hash");
+		final Integer MAX_THREAD = PropKit.use("crawler.properties").getInt("main.metadata.thread.num") + 200;
 		
 		//配置announce_peers请求监听器
 		server.setOnAnnouncePeerListener(new OnAnnouncePeerListener() {
@@ -111,37 +108,18 @@ public class Main extends Thread {
 			@Override
 			public void onAnnouncePeer(InetSocketAddress address, byte[] info_hash, int port) {
 				//System.out.println("announce_peer request, address:" + address.getHostString() + ":" + port + ", info_hash:" + ByteUtil.byteArrayToHex(info_hash) + "dps size:" + dps.size());
-				if (hashQueue.size() > MAX_INFO_HASH) {
-					return;
-				}
-				if (jedis.dbSize() > 500000) {
+				if (jedis.dbSize() > MAX_INFO_HASH) {
 					jedis.flushDB();
 					jedis.flushAll();
+					System.gc();
+					return;
 				}
 				//String hash = ByteUtil.byteArrayToHex(info_hash);
 				if (jedis.getSet(info_hash, new byte[]{0}) == null) {
-					try {
 						//放进阻塞队列交给其他线程来检测info_hash是否存在，若在此处检测严重影响爬虫Server获取innfo_hash的速度
-						hashQueue.put(new DownloadPeer(address.getHostString(), port, info_hash));
-					} catch (InterruptedException e) {
-						//jedis.del(info_hash);
-					}
-					
-					//Torrent torrent = Torrent.dao.findFirst("select * from tb_file where info_hash=? limit 1", ByteUtil.byteArrayToHex(info_hash));
-					
-					/*int result = Db.update("update tb_file set hot=hot+1 where info_hash=?", ByteUtil.byteArrayToHex(info_hash));
-					if (result > 0) {
-					//if (torrent != null) {
-						//torrent.set("hot", torrent.getLong("hot") + 1).update();
-						jedis.del(info_hash);
-						return;
-					}
-
-					try {
-						downloadPeerQueue.put(new DownloadPeer(address.getHostString(), port, info_hash));
-					} catch (InterruptedException e) {
-						jedis.del(info_hash);
-					}*/
+				CheckExistThreadPool.execute(new CheckExistTask(
+						new DownloadPeer(address.getHostString(), port, info_hash), 
+						metadataDwonloadThreadPool, MAX_THREAD));
 				}
 			}
 		});
@@ -150,7 +128,8 @@ public class Main extends Thread {
 	}
 	
 	public void stopAll() {
-		threadPool.shutdown();
+		metadataDwonloadThreadPool.shutdown();
+		CheckExistThreadPool.shutdown();
 		for (Thread t : threads) {
 			t.interrupt();
 		}

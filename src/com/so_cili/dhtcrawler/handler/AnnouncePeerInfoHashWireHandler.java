@@ -490,6 +490,8 @@ public class AnnouncePeerInfoHashWireHandler implements IInfoHashHandler {
 		//System.out.println("exit");
 		stop = true;
 		metadata = null;
+		map.clear();
+		map = null;
 		try {
 			if (writeStream != null) {
 				writeStream.close();
@@ -539,6 +541,7 @@ public class AnnouncePeerInfoHashWireHandler implements IInfoHashHandler {
 			onMetadataListener.onMetadata(torrent);
 			torrent = null;
 		}
+		onMetadataListener = null;
 	}
 	
 	private void parseNext(int nextSize, NextFunction nextFunction) {
