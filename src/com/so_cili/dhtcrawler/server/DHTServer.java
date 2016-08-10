@@ -445,10 +445,10 @@ public class DHTServer extends Thread {
     public void run() {
     	while (true) {
     		//System.out.println(queue.size());
-    		Node node = queue.remove();
-    		//ping(new InetSocketAddress(node.getIp(), node.getPort()));
-    		findNode(new InetSocketAddress(node.getIp(), node.getPort()),node.getNid(), NodeIdUtil.buildNodeId());
             try {
+            	Node node = queue.remove();
+        		//ping(new InetSocketAddress(node.getIp(), node.getPort()));
+        		findNode(new InetSocketAddress(node.getIp(), node.getPort()),node.getNid(), NodeIdUtil.buildNodeId());
                 Thread.sleep(50);
             } catch (InterruptedException e) {
             }

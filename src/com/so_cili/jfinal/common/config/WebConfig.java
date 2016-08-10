@@ -62,6 +62,7 @@ public class WebConfig extends JFinalConfig {
 		C3p0Plugin c3p0Plugin=new C3p0Plugin(prop.get("jdbcUrl"), prop.get("user"), prop.get("password"));
 		c3p0Plugin.setMaxPoolSize(prop.getInt("maxPoolSize"));
 		c3p0Plugin.setMinPoolSize(prop.getInt("minPoolSize"));
+		c3p0Plugin.setMaxIdleTime(200);
 		//orm映射 配置ActiveRecord插件
 		ActiveRecordPlugin arp=new ActiveRecordPlugin(c3p0Plugin);
 		arp.setShowSql(PropKit.getBoolean("devMode"));

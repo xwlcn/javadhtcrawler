@@ -26,7 +26,7 @@ public class ConnectionPool {
 
 	private int incrementalConnections = 5;// 连接池自动增加的大小
 
-	private int maxConnections = 500; // 连接池最大的大小
+	private int maxConnections = 800; // 连接池最大的大小
 
 	private Vector connections = null; // 存放连接池中数据库连接的向量 , 初始时为 null
 

@@ -35,10 +35,10 @@ public class WireMetadataDownloadTask implements Runnable {
 				//System.out.println(e.getMessage());
 			} finally {
 				//jedis.del(peer.getInfo_hash());
+				Main.count.decrementAndGet();
 				handler.release();
 				handler = null;
 				peer = null;
-				Main.count.decrementAndGet();
 			}
 
 	}
@@ -51,7 +51,7 @@ public class WireMetadataDownloadTask implements Runnable {
 					//System.out.println("finished,dps size:" + dps.size());
 					if (torrent == null || torrent.getInfo() == null)
 						return;
-					//System.out.print("success count:" + Main.count.getAndIncrement() + "\r");
+					//System.out.print("success count:" + Main.success_count.getAndIncrement() + "\r");
 					//入库操作
 					com.so_cili.jfinal.entity.Torrent t = new com.so_cili.jfinal.entity.Torrent();
 					t.set("info_hash", torrent.getInfo_hash())

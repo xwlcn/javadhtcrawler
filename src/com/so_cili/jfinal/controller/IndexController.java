@@ -87,15 +87,17 @@ public class IndexController extends Controller {
 		render("info.jsp");
 	}
 	
-	public void testIndex() {
+	/*public void testIndex() {
 		//Torrent.dao.paginate(1, 100, "select info_hash,name", "from tb_file");
-		List<Torrent> list = Torrent.dao.paginate(1, 100, "select info_hash,name", "from tb_file").getList();
+		List<Torrent> list = Torrent.dao.paginate(1, 2000, "select info_hash,name", "from tb_file").getList();
 		System.out.println(list.size());
 		IndexManager.createIndex(list.toArray(new Torrent[]{}));
+		renderHtml("success");
 	}
 
 	public void indexAll() {
 		service.createIndex();
+		System.out.println("indexAll success");
 		renderHtml("success");
 	}
 	
@@ -107,5 +109,5 @@ public class IndexController extends Controller {
 			e.printStackTrace();
 		}
 		renderHtml("count:" + rtn);
-	}
+	}*/
 }

@@ -95,22 +95,25 @@ public class AnnouncePeerInfoHashWireHandler implements IInfoHashHandler {
 			stop = false;
 			nextSize = 0;
 			
+			this.address = address;
+			this.info_hash = info_hash;
+			
+			socket = new Socket();
+			socket.setReuseAddress(true);
+			socket.connect(this.address, CONNECT_TIMEOUT);
+			socket.setSoTimeout(READ_WRITE_TIMEOUT);
+			in = socket.getInputStream();
+			out = socket.getOutputStream();
+			
 			writeStream = new PipedOutputStream();
 			readStream = new PipedInputStream(22 * 1024);
 			readStream.connect(writeStream);
 			os = new BufferedOutputStream(writeStream);
 			
-			this.address = address;
-			this.info_hash = info_hash;
-			
 			parseHandShake();
 			
-			socket = new Socket();
-			socket.connect(this.address, CONNECT_TIMEOUT);
-			socket.setSoTimeout(READ_WRITE_TIMEOUT);
-			in = socket.getInputStream();
-			out = socket.getOutputStream();
 			sendHandShake();
+			
 			loop();
 
 	}
@@ -490,8 +493,6 @@ public class AnnouncePeerInfoHashWireHandler implements IInfoHashHandler {
 		//System.out.println("exit");
 		stop = true;
 		metadata = null;
-		map.clear();
-		map = null;
 		try {
 			if (writeStream != null) {
 				writeStream.close();

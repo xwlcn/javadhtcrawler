@@ -15,13 +15,10 @@ import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.highlight.Fragmenter;
 import org.apache.lucene.search.highlight.Highlighter;
@@ -30,6 +27,7 @@ import org.apache.lucene.search.highlight.SimpleHTMLFormatter;
 import org.apache.lucene.search.highlight.SimpleSpanFragmenter;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.wltea.analyzer.lucene.IKAnalyzer;
 
 import com.alibaba.fastjson.JSON;
 import com.chenlb.mmseg4j.analysis.ComplexAnalyzer;
@@ -51,12 +49,11 @@ public class IndexManager {
 	private static Directory directory = null;
 	//private static IndexSearcher searcher = null;
 	private static IndexWriter writer = null;
-	private static Analyzer analyzer = null;
+	private final static Analyzer analyzer = new IKAnalyzer();
 
 	static {
 		try {
 			directory = FSDirectory.open(Paths.get(TORRENT_NAME_INDEX_PATH));
-			analyzer = new ComplexAnalyzer();
 			IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
 			writer = new IndexWriter(directory, iwc);
 		} catch (IOException e) {
