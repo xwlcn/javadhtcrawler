@@ -50,31 +50,35 @@ public class SaveTorrentTask extends Thread {
 				sleep(20000);
 				
 				List<com.so_cili.jfinal.entity.Torrent> list = torrentQueue.getAll();
-				List<Torrent> torrents = new ArrayList<>();
-				
-				for (com.so_cili.jfinal.entity.Torrent t : list) {
-					statment.setString(1, t.getStr("info_hash"));
-					statment.setString(2, t.getStr("name"));
-					statment.setString(3, t.getStr("type"));
-					statment.setTimestamp(4, t.getTimestamp("find_date"));
-					statment.setLong(5, t.getLong("size"));
-					statment.setBytes(6, t.getBytes("subfiles"));
-					statment.addBatch();
-				}
-				try {
-					int[] rs = statment.executeBatch();
-					conn.commit();
-					for (int i = 0; i < rs.length; i++) {
-						if (rs[i] > 0) {
-							torrents.add(new com.so_cili.jfinal.entity.Torrent()
-									.set("info_hash", list.get(i).getStr("info_hash"))
-									.set("name", list.get(i).getStr("name")));
-						}
+				if (list.size() > 0) {
+					List<Torrent> torrents = new ArrayList<>();
+					
+					for (com.so_cili.jfinal.entity.Torrent t : list) {
+						statment.setString(1, t.getStr("info_hash"));
+						statment.setString(2, t.getStr("name"));
+						statment.setString(3, t.getStr("type"));
+						statment.setTimestamp(4, t.getTimestamp("find_date"));
+						statment.setLong(5, t.getLong("size"));
+						statment.setBytes(6, t.getBytes("subfiles"));
+						statment.addBatch();
 					}
-				} catch (Exception e) {}
-				IndexManager.createIndex(torrents.toArray(new Torrent[torrents.size()]));
-				list.clear();
-				list = null;
+					try {
+						int[] rs = statment.executeBatch();
+						conn.commit();
+						for (int i = 0; i < rs.length; i++) {
+							if (rs[i] > 0) {
+								torrents.add(new com.so_cili.jfinal.entity.Torrent()
+										.set("info_hash", list.get(i).getStr("info_hash"))
+										.set("name", list.get(i).getStr("name")));
+							}
+						}
+					} catch (Exception e) {
+						System.out.println(e.getMessage());
+					}
+					IndexManager.createIndex(torrents.toArray(new Torrent[torrents.size()]));
+					list.clear();
+					list = null;
+				}
 				/*List<com.so_cili.jfinal.entity.Torrent> list = torrentQueue.getAll();
 				List<Torrent> torrents = new ArrayList<>();
 				try {

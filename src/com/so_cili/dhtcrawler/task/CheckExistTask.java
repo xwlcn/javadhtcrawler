@@ -67,7 +67,7 @@ public class CheckExistTask extends Thread {
 					Main.count.incrementAndGet();
 				}*/
 			} catch (Exception e) {
-				
+				System.out.println(e.getMessage());
 			} finally {
 				/*if (statment != null) {
 					try {
