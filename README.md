@@ -6,8 +6,8 @@ a dht crawler, include crawler and web
 * 1.解决大量SocksSocketImpl对象吃内存的问题！具体做法还请使用者自己按照我的说法去做：导致该问题的原因就是SocksSocketImpl的某个父类重写了finalize方法以至于大量对SocksSocketImpl的引用对象Finalizer在FinalizerThread线程的队列中得不到及时回收，解决办法：修改JDK源码中AbstractPlainSocketImpl.java删掉finalize方法重新编译，最后将编译的class文件替换到rt.jar包中去。
 * 2.lucene分词器由mmseg4j换成IKAnalizer分词器
 * 3.不再使用JFinal的DB + Record的方式操作数据库，因为它的做法是连接池的做法，在爬虫中使用通过jmap -dump发现大量的数据库连接对象占用内存。单独使用一个线程处理info_hash（在crawler中也可以配置多个），检测是已经否存数据库中，将单个info_hash检测改成批量检测，减轻数据库压力。
-* 4.通过长时间监控，发现内存占用还是非常明显，原因就是JAVA的垃圾回收机制，不像其他语言，是程序员自己来管理内存，在爬虫中药创建大量Socket去下载metadata，有些Socket的生命周期就是两三秒的时间，这样一来启动程序的时候内存下降的十分明显，这也是在所难免的，因为Socket对象JVM并不会垃圾回收。所以内存下载明显请不要大惊小怪，十分存在其他内存漏洞还请各位自行jmap -dump查询。
-------------------------
+* 4.通过长时间监控，发现内存占用还是非常明显，原因就是JAVA的垃圾回收机制，不像其他语言，是程序员自己来管理内存，在爬虫中药创建大量Socket去下载metadata，有些Socket的生命周期就是两三秒的时间，这样一来启动程序的时候内存下降的十分明显，这也是在所难免的，因为Socket对象JVM并不会垃圾回收。所以内存下降明显请不要大惊小怪，使用free -m 查看内存使用情况，可以看到cache内存占绝大部分，是否存在其他内存漏洞还请各位自行jmap -dump查询。
+
 # 运行环境
 * 1.tomcat 8
 * 2.mysql 5.1
@@ -36,9 +36,8 @@ CREATE TABLE `tb_aver` (
 `cover`  varchar(100) CHARACTER SET utf8 COLLATE utf8_bin NULL DEFAULT NULL ,
 `list`  mediumtext CHARACTER SET utf8 COLLATE utf8_bin NULL ,
 PRIMARY KEY (`id`)
-)```
+)
 
-```sql
 CREATE TABLE `tb_file` (
 `id`  bigint(32) NOT NULL AUTO_INCREMENT ,
 `info_hash`  varchar(40) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL ,
@@ -53,4 +52,5 @@ PRIMARY KEY (`id`),
 FOREIGN KEY (`aid`) REFERENCES `tb_aver` (`id`) ON DELETE SET NULL ON UPDATE NO ACTION,
 UNIQUE INDEX `info_hash` (`info_hash`) USING BTREE ,
 INDEX `fk_1` (`aid`) USING BTREE 
-)```
+)
+```
