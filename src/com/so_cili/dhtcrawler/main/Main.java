@@ -120,6 +120,8 @@ public class Main extends Thread {
 			@Override
 			public void onAnnouncePeer(InetSocketAddress address, byte[] info_hash, int port) {
 				//System.out.println("announce_peer request, address:" + address.getHostString() + ":" + port + ", info_hash:" + ByteUtil.byteArrayToHex(info_hash) + "dps size:" + dps.size());
+				if (hashQueue.size() > MAX_INFO_HASH)
+					return;
 				if (redis_size > MAX_INFO_HASH) {
 					redis_size = 0;
 					jedis.flushDB();
