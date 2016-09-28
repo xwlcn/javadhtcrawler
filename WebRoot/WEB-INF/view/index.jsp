@@ -1,4 +1,4 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+﻿<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!DOCTYPE html>
@@ -25,6 +25,8 @@
 				<div class="container cl">
 					<div class="row mt-40">
 						<span class="label label-warning radius">热门搜索:</span>
+						<a class="label label-success radius" href="${pageContext.request.contextPath }/search/谍影重重5">谍影重重5</a>
+						<a class="label label-success radius" href="${pageContext.request.contextPath }/search/使徒行者">使徒行者</a>
 						<a class="label label-success radius" href="${pageContext.request.contextPath }/search/惊天魔盗团2">惊天魔盗团2</a>
 						<a class="label label-success radius" href="${pageContext.request.contextPath }/search/三人行">三人行</a>
 						<a class="label label-success radius" href="${pageContext.request.contextPath }/search/犯罪家族">犯罪家族</a>
@@ -33,8 +35,6 @@
 						<a class="label label-success radius" href="${pageContext.request.contextPath }/search/东柱">东柱</a>
 						<a class="label label-success radius" href="${pageContext.request.contextPath }/search/魔兽">魔兽</a>
 						<a class="label label-success radius" href="${pageContext.request.contextPath }/search/老笠">老笠</a>
-						<a class="label label-success radius" href="${pageContext.request.contextPath }/search/X战警:天启">X战警:天启</a>
-						<a class="label label-success radius" href="${pageContext.request.contextPath }/search/美人鱼">美人鱼</a>
 					</div>
 				</div>
 			</div>

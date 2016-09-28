@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.jfinal.kit.PropKit;
 import com.jfinal.plugin.activerecord.Db;
+import com.so_cili.dhtcrawler.main.Main;
 import com.so_cili.dhtcrawler.util.StringUtil;
 import com.so_cili.jfinal.entity.Torrent;
 
@@ -17,6 +18,8 @@ public class DataBase extends Thread {
 
 	private static boolean stop = false;
 	
+	private static boolean first = true;
+	
 	public static void startCache() {
 		
 		new DataBase().start();
@@ -29,8 +32,13 @@ public class DataBase extends Thread {
 		
 		while (!stop) {
 			try {
-				total = Db.queryLong("SELECT COUNT(id) FROM tb_file");
-				top50 = Torrent.dao.find("SELECT id,info_hash,name,find_date FROM tb_file ORDER BY find_date DESC LIMIT 50");
+				if (first) {
+					total = Db.queryLong("SELECT COUNT(id) FROM tb_file");
+					first = false;
+					Main.me.start();
+					System.out.println("########################### Main start ###########################");
+				}
+				top50 = Torrent.dao.find("SELECT id,info_hash,name,find_date FROM tb_file ORDER BY id DESC LIMIT 50");
 				for (Torrent t : top50) {
 					t.put("flag", t.get("id") + StringUtil.formatStr(t.getStr("name")));
 				}

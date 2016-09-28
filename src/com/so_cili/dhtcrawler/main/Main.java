@@ -21,6 +21,7 @@ import com.so_cili.dhtcrawler.structure.DownloadPeer;
 import com.so_cili.dhtcrawler.structure.MyQueue;
 import com.so_cili.dhtcrawler.task.CheckExistTask;
 import com.so_cili.dhtcrawler.task.SaveTorrentTask;
+import com.so_cili.dhtcrawler.util.ByteUtil;
 import com.so_cili.jfinal.entity.Torrent;
 
 import redis.clients.jedis.Jedis;
@@ -43,6 +44,8 @@ public class Main extends Thread {
 	@Override
 	public void run() {
 		
+		System.out.println("Main start...");
+		
 		//连接redis缓存服务器
 		Jedis jedis = RedisPool.getJedis();
 		if (jedis == null) {
@@ -52,7 +55,7 @@ public class Main extends Thread {
 		jedis.flushDB();
 		jedis.flushAll();
 		
-		connPool = new ConnectionPool("com.mysql.jdbc.Driver", "jdbc:mysql:///dht?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull", "root", "1993527wan");
+		//connPool = new ConnectionPool("com.mysql.jdbc.Driver", "jdbc:mysql:///dht?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull", "root", "1993527wan");
 		
 		Prop prop = PropKit.use("crawler.properties");
 		
@@ -77,15 +80,13 @@ public class Main extends Thread {
 		}*/
 		
 		//启动检测info_hash在数据库是否存在的线程
-		try {
-			for (int i = 0; i < prop.getInt("main.checkexist.thread.num"); i++) {
-				Thread t = new CheckExistTask(hashQueue, metadataDwonloadThreadPool, connPool.getConnection(), MAX_THREAD);
-				threads.add(t);
-				t.start();
-			}
-		} catch (SQLException e) {
-			//e.printStackTrace();
+
+		for (int i = 0; i < prop.getInt("main.checkexist.thread.num"); i++) {
+			Thread t = new CheckExistTask(hashQueue, metadataDwonloadThreadPool, null, MAX_THREAD);
+			threads.add(t);
+			t.start();
 		}
+
 
 		SaveTorrentTask saveTorrentTask = new SaveTorrentTask(torrentQueue, connPool);
 		threads.add(saveTorrentTask);
@@ -119,7 +120,7 @@ public class Main extends Thread {
 			
 			@Override
 			public void onAnnouncePeer(InetSocketAddress address, byte[] info_hash, int port) {
-				//System.out.println("announce_peer request, address:" + address.getHostString() + ":" + port + ", info_hash:" + ByteUtil.byteArrayToHex(info_hash) + "dps size:" + dps.size());
+				//System.out.print("announce_peer request, address:" + address.getHostString() + ":" + port + ", info_hash:" + ByteUtil.byteArrayToHex(info_hash) + "\r");
 				if (hashQueue.size() > MAX_INFO_HASH)
 					return;
 				if (redis_size > MAX_INFO_HASH) {

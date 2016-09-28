@@ -97,7 +97,7 @@ public class WebConfig extends JFinalConfig {
 	public void afterJFinalStart() {
 		super.afterJFinalStart();
 		DataBase.startCache();
-		Main.me.start();
+		//Main.me.start();
 		//new AddPicture().start();
 		//new CreateIndex().start();
 		//new PutSubfiles().start();
