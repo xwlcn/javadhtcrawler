@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
+import com.jfinal.plugin.activerecord.Record;
 import com.so_cili.dhtcrawler.util.StringUtil;
 import com.so_cili.jfinal.entity.Torrent;
 import com.so_cili.lucene.bean.PageBean;
@@ -27,8 +28,8 @@ public class TorrentService {
 		System.out.println("create index finished");
 	}
 	
-	public PageBean<Torrent> search(String keyword, int curPage, Integer pageSize) {
-		PageBean<Torrent> page = null;
+	public PageBean<Record> search(String keyword, int curPage, Integer pageSize) {
+		PageBean<Record> page = null;
 		try {
 			page = IndexManager.search(keyword, curPage, pageSize);
 		} catch (IOException e) {
@@ -59,11 +60,11 @@ public class TorrentService {
 	 * @param torrent
 	 * @return
 	 */
-	public Torrent findPreTorrent(Torrent torrent) {
-		Torrent pre = Torrent.dao.findFirst("SELECT id,info_hash, name FROM tb_file WHERE id < ? ORDER BY id DESC limit 1", 
+	public Record findPreTorrent(Record torrent) {
+		Record pre = Db.findFirst("SELECT id,info_hash, name FROM tb_file WHERE id < ? ORDER BY id DESC limit 1", 
 				torrent.getLong("id"));
 		if (pre !=  null)
-			pre.put("flag", pre.get("id") + StringUtil.formatStr(pre.getStr("name")));
+			pre.set("flag", pre.get("id") + "-" + pre.getStr("info_hash").substring(0, 1) + StringUtil.formatStr(pre.getStr("name")));
 		return pre;
 	}
 
@@ -72,11 +73,11 @@ public class TorrentService {
 	 * @param torrent
 	 * @return
 	 */
-	public Torrent findNextTorrent(Torrent torrent) {
-		Torrent next = Torrent.dao.findFirst("SELECT id,info_hash, name FROM tb_file WHERE id > ? limit 1",
+	public Record findNextTorrent(Record torrent) {
+		Record next = Db.findFirst("SELECT id,info_hash, name FROM tb_file WHERE id > ? limit 1",
 				torrent.getLong("id"));
 		if (next !=  null)
-			next.put("flag", next.get("id") + StringUtil.formatStr(next.getStr("name")));
+			next.set("flag", next.get("id") + "-" + next.getStr("info_hash").substring(0, 1) + StringUtil.formatStr(next.getStr("name")));
 		return next;
 	}
 	

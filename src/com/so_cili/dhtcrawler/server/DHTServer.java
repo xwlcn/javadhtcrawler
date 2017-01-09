@@ -88,6 +88,8 @@ public class DHTServer extends Thread {
     
     private ConnectionlessBootstrap b;
     
+    private volatile boolean stop = false;
+    
     /**
      * 启动节点列表
      */
@@ -443,7 +445,7 @@ public class DHTServer extends Thread {
     
     @Override
     public void run() {
-    	while (true) {
+    	while (!stop) {
     		//System.out.println(queue.size());
             try {
             	Node node = queue.remove();
@@ -484,6 +486,8 @@ public class DHTServer extends Thread {
 	}
     
     public void stopAll() {
+    	stop = true;
+    	this.interrupt();
     	if (channel != null)
     		channel.close().awaitUninterruptibly();
     	if (b != null)
@@ -492,4 +496,3 @@ public class DHTServer extends Thread {
     		autoRejoinDHTTimer.cancel();
     }
 }
-

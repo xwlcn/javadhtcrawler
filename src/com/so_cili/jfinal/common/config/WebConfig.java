@@ -15,8 +15,8 @@ import com.jfinal.plugin.c3p0.C3p0Plugin;
 import com.jfinal.render.ViewType;
 import com.so_cili.dhtcrawler.constant.DataBase;
 import com.so_cili.dhtcrawler.main.Main;
+import com.so_cili.dhtcrawler.util.DBUtil;
 import com.so_cili.jfinal.controller.IndexController;
-import com.so_cili.jfinal.entity.AVer;
 import com.so_cili.jfinal.handler.ParaHandler;
 import com.so_cili.lucene.manager.IndexManager;
 
@@ -68,8 +68,7 @@ public class WebConfig extends JFinalConfig {
 		arp.setShowSql(PropKit.getBoolean("devMode"));
 		arp.setDialect(new MysqlDialect());
 		/********在此添加数据库 表-Model 映射*********/
-		arp.addMapping("tb_file", com.so_cili.jfinal.entity.Torrent.class);
-		arp.addMapping("tb_aver", AVer.class);
+		//arp.addMapping("tb_file", com.so_cili.jfinal.entity.Torrent.class);
 		//arp.addMapping("tb_subfile", SubFile.class);
 		//添加到插件列表中
 		me.add(c3p0Plugin);
@@ -80,7 +79,6 @@ public class WebConfig extends JFinalConfig {
 	 */
 	@Override
 	public void configInterceptor(Interceptors me) {
-
 	}
 	/**
 	 * 配置全局处理器
@@ -97,7 +95,8 @@ public class WebConfig extends JFinalConfig {
 	public void afterJFinalStart() {
 		super.afterJFinalStart();
 		DataBase.startCache();
-		//Main.me.start();
+		DBUtil.initSequence();
+		Main.me.start();
 		//new AddPicture().start();
 		//new CreateIndex().start();
 		//new PutSubfiles().start();

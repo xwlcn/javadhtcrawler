@@ -48,7 +48,7 @@ public class SaveTorrentTask extends Thread {
 								torrents.add(new com.so_cili.jfinal.entity.Torrent()
 										.set("info_hash", list.get(i).getStr("info_hash"))
 										.set("name", list.get(i).getStr("name")));
-								DataBase.total++;
+								//DataBase.total++;
 							}
 						}
 					}

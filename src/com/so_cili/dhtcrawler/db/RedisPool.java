@@ -286,5 +286,9 @@ public class RedisPool {
 			}
 		}
     }
+    
+    public static void close() {
+    	jedisPool.close();
+    }
 
 }

@@ -32,7 +32,10 @@ import org.wltea.analyzer.lucene.IKAnalyzer;
 import com.alibaba.fastjson.JSON;
 import com.chenlb.mmseg4j.analysis.ComplexAnalyzer;
 import com.jfinal.kit.PropKit;
+import com.jfinal.plugin.activerecord.Db;
+import com.jfinal.plugin.activerecord.Record;
 import com.so_cili.dhtcrawler.structure.SubFile;
+import com.so_cili.dhtcrawler.util.DBUtil;
 import com.so_cili.dhtcrawler.util.StringUtil;
 import com.so_cili.dhtcrawler.util.ZipUtil;
 import com.so_cili.jfinal.entity.Torrent;
@@ -75,8 +78,9 @@ public class IndexManager {
 		try {
 			for (Torrent torrent : torrents) {
 				Document document = new Document();
+				document.add(new TextField("id", torrent.getLong("id") + "", Field.Store.YES));
 				document.add(new TextField("info_hash", torrent.getStr("info_hash"), Field.Store.YES));
-				document.add(new TextField("name", torrent.getStr("name"), Field.Store.YES));
+				document.add(new TextField("name", torrent.getStr("name"), Field.Store.NO));
 				writer.addDocument(document);
 			}
 			writer.commit();
@@ -92,7 +96,7 @@ public class IndexManager {
 	 * @return
 	 * @throws IOException
 	 */
-	public static PageBean<Torrent> search(String keyword, int curPage, Integer pageSize) throws IOException {
+	public static PageBean<Record> search(String keyword, int curPage, Integer pageSize) throws IOException {
 		if (pageSize == null)
 			pageSize = PAGE_SIZE;
 		IndexSearcher searcher = new IndexSearcher(DirectoryReader.open(directory));
@@ -107,9 +111,9 @@ public class IndexManager {
             if (null != hits.scoreDocs && hits.totalHits > 0) {
                 for (ScoreDoc hit : hits.scoreDocs) {
                     doc = searcher.doc(hit.doc);
-                    hashes.add("'" + doc.get("info_hash") + "'");
+                    hashes.add("SELECT * FROM tb_file_" + doc.get("info_hash").substring(0, 1) + "_" + (Long.parseLong(doc.get("id")) / DBUtil.TABLE_MAX_LINE) + " WHERE info_hash ='" + doc.get("info_hash") + "'");
                 }
-                List<Torrent> list = Torrent.dao.find("select * from tb_file where info_hash in(" + org.apache.commons.lang.StringUtils.join(hashes, ",") + ")");
+                List<Record> list = Db.find(org.apache.commons.lang.StringUtils.join(hashes, " UNION "));
                 
                 QueryScorer scorer=new QueryScorer(query);
                 SimpleHTMLFormatter formatter = new SimpleHTMLFormatter("<span class=\"c-red\">","</span>");
@@ -117,17 +121,17 @@ public class IndexManager {
                 Highlighter highlight=new Highlighter(formatter, scorer);  
                 highlight.setTextFragmenter(fragmenter);
                 
-                for (Torrent torrent : list) {
-                	torrent.put("sSize", StringUtil.formatSize((double) torrent.getLong("size")));
-                	torrent.put("flag", torrent.get("id") + StringUtil.formatStr(torrent.getStr("name")));
-                	torrent.put("subfiles", JSON.parseArray(ZipUtil.decompress(torrent.getBytes("subfiles")), SubFile.class));
+                for (Record torrent : list) {
+                	String name = new String(torrent.getBytes("name"));
+                	torrent.set("sSize", StringUtil.formatSize((double) torrent.getLong("size")));
+                	torrent.set("flag", torrent.get("id") + "-" + torrent.getStr("info_hash").substring(0, 1) + StringUtil.formatStr(name));
+                	torrent.set("subfiles", JSON.parseArray(ZipUtil.decompress(torrent.getBytes("subfiles")), SubFile.class));
                 	//高亮显示
-                	String name = torrent.getStr("name");
                 	TokenStream tokenStream = analyzer.tokenStream("name", new StringReader(name));    
                     String highLightName = highlight.getBestFragment(tokenStream, name);
-                    torrent.put("name", highLightName);
+                    torrent.set("name", highLightName);
                 }
-                return new PageBean<Torrent>(hits.totalHits, curPage, pageSize, (int)Math.ceil((double)hits.totalHits / pageSize), list);
+                return new PageBean<Record>(hits.totalHits, curPage, pageSize, (int)Math.ceil((double)hits.totalHits / pageSize), list);
                 
             } else {
                 return null;

