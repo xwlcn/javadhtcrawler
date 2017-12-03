@@ -1,8 +1,8 @@
-# javadhtcrawler（对你有用能否赏个Star？）
+演示地址：http://so-cili.com
 a dht crawler, include crawler and web
-不会写文档，也不想写文档，但还是要让小白能够成功跑起来，所以还是不得不瞎扯一下。不懂的再QQ联系：331319769
+仅供参考使用，想要跑起来的同学还是算了吧，由于当时本人比较菜，代码写得比较杂乱，部署也较麻烦，所以仅供参考爬虫部分实现。
 ---------------------------------------
-#跟新日志
+#更新日志
 * ~~1.解决大量SocksSocketImpl对象吃内存的问题！具体做法还请使用者自己按照我的说法去做：导致该问题的原因就是SocksSocketImpl的某个父类重写了finalize方法以至于大量对SocksSocketImpl的引用对象Finalizer在FinalizerThread线程的队列中得不到及时回收，解决办法：修改JDK源码中AbstractPlainSocketImpl.java删掉finalize方法重新编译，最后将编译的class文件替换到rt.jar包中去。~~
 * 2.lucene分词器由mmseg4j换成IKAnalizer分词器
 * ~~3.不再使用JFinal的DB + Record的方式操作数据库，因为它的做法是连接池的做法，在爬虫中使用通过jmap -dump发现大量的数据库连接对象占用内存。单独使用一个线程处理info_hash（在crawler中也可以配置多个），检测是已经否存数据库中，将单个info_hash检测改成批量检测，减轻数据库压力。~~
